@@ -7,15 +7,15 @@ Ubase = 20e3
 Zbase = (Ubase**2)/Sbase
 
 # Nodes
-Nodes = [{'id': 0, 'slack': True  },
-         {'id': 1, 'slack': False },
-         {'id': 2, 'slack': False },
-         {'id': 3, 'slack': False }]
+Nodes = [{'id': 0, 'slack': True  , 'V': 20e3/Ubase},
+         {'id': 1, 'slack': False , 'V': 20e3/Ubase},
+         {'id': 2, 'slack': False , 'V': 20e3/Ubase},
+         {'id': 3, 'slack': False , 'V': 20e3/Ubase}]
 
 # Lines
-Lines = [{'id': 0,  'From': 0,  'To': 1,  'R': 0.161*4/Zbase, 'X': 0.190*4/Zbase }, 
-         {'id': 1,  'From': 1,  'To': 2,  'R': 0.161*2/Zbase, 'X': 0.190*2/Zbase }, 
-         {'id': 2,  'From': 2,  'To': 3,  'R': 0.161*5/Zbase, 'X': 0.190*5/Zbase }]
+Lines = [{'id': 0,  'From': 0,  'To': 1,  'R': 0.161*4/Zbase, 'X': 0.190*4/Zbase}, 
+         {'id': 1,  'From': 1,  'To': 2,  'R': 0.161*2/Zbase, 'X': 0.190*2/Zbase}, 
+         {'id': 2,  'From': 2,  'To': 3,  'R': 0.161*5/Zbase, 'X': 0.190*5/Zbase}]
 
 # Prosumers
 Pros = [{'id': 0, 'Node': 1, 'P': -2e6/Sbase, 'Q': -1.5e6/Sbase},
@@ -25,6 +25,11 @@ Pros = [{'id': 0, 'Node': 1, 'P': -2e6/Sbase, 'Q': -1.5e6/Sbase},
 # Constructing network and solving power flow
 net = lib.grid(Nodes, Lines, Pros)
 
+for x in net.nodes:
+    for y in x.pros:
+        print(f'Nodo {x.ref} Prosumer {y.ref}\n')
+
+net.pf()
 
 # Algunos comandos interesantes
 # net.__dict__
