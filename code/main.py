@@ -25,30 +25,32 @@ Pros = [{'id': 0, 'Node': 1, 'P': -2e6/Sbase, 'Q': -1.5e6/Sbase},
 # Constructing network and solving power flow
 net = lib.grid(Nodes, Lines, Pros)
 
-for x in net.nodes:
-    for y in x.pros:
-        print(f'Nodo {x.ref} Prosumer {y.ref}\n')
+sol = net.solve_pf()
 
-a, b = net.pf()
-#A = net.obtain_A()
-#B = net.obtain_B()
-#X = net.obtain_index()
-#f = net.obtain_f()
+# for x in net.nodes:
+#     for y in x.pros:
+#         print(f'Nodo {x.ref} Prosumer {y.ref}\n')
 
-net.obtain_index()
-net.obtain_A()
-net.obtain_B()
-A = net.A
-B = net.B
-X = net.X
-net.obtain_f(X)
-f = net.f
-cuenta = net.cuenta
+# a, b = net.pf()
+# #A = net.obtain_A()
+# #B = net.obtain_B()
+# #X = net.obtain_index()
+# #f = net.obtain_f()
+
+# net.obtain_index()
+# net.obtain_A()
+# net.obtain_B()
+# A = net.A
+# B = net.B
+# X = net.X
+# net.obtain_f(X)
+# f = net.f
 
 
-lineas = net.lines
-for linea in lineas:
-    linea.ineq(X)
+
+# lineas = net.lines
+# for linea in lineas:
+#     linea.ineq(X)
 
 
 # Inecuacion = lib.line(ref= 0, From= 0, To= 1, R= 0.161*4/Zbase, X= 0.109*4/Zbase, nodes_list= Nodes )

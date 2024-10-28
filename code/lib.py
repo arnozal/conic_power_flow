@@ -1,5 +1,6 @@
 # Importing required libraries
 import numpy as np
+from scipy.optimize import minimize, NonlinearConstraint, LinearConstraint
 
 class grid:
     def __init__(self, nodes, lines, pros):
@@ -8,7 +9,8 @@ class grid:
         self.pros = self.add_pros(pros, self.nodes)  
         self.n = len(self.nodes)
         self.m = len(self.lines)
-        self.x_size = self.n+(2*self.m)
+        self.x_size = self.n+(2*self.m)-1
+        self.obtain_index()
         
     def add_nodes(self, nodes):
         nodes_list = list()
@@ -32,32 +34,34 @@ class grid:
         n_aux = 0
         matrizX = np.zeros((self.x_size,1), dtype=float)
         while n_aux < self.n:
-            self.nodes[n_aux].index = n_aux
+            self.nodes[n_aux].index = n_aux -1
             n_aux += 1
         
         n_aux2 = 0    
         while n_aux2 < self.m:   
-            self.lines[n_aux2].index.append(n_aux)
+            self.lines[n_aux2].index.append(n_aux - 1)
             n_aux += 1
             n_aux2 += 1
         
         n_aux3 = 0    
         while n_aux3 < self.m:   
-            self.lines[n_aux3].index.append(n_aux)
+            self.lines[n_aux3].index.append(n_aux - 1)
             n_aux += 1
             n_aux3 += 1   
     
-        matrizX1 = np.array([node.index for node in self.nodes]).reshape(self.n, 1)
-        matrizX2 = np.array([line.index[0] for line in self.lines]).reshape(self.m, 1)           
-        matrizX3 = np.array([line.index[1] for line in self.lines]).reshape(self.m, 1)     
-        matrizX = np.vstack((matrizX1, matrizX2, matrizX3)) 
+        # matrizX1 = np.array([node.index for node in self.nodes]).reshape(self.n, 1)
+        # matrizX2 = np.array([line.index[0] for line in self.lines]).reshape(self.m, 1)           
+        # matrizX3 = np.array([line.index[1] for line in self.lines]).reshape(self.m, 1)     
+        # matrizX = np.vstack((matrizX1, matrizX2, matrizX3)) 
         
-        self.X = matrizX
-          
+        # self.X = matrizX
+        self.X = np.zeros(self.x_size)
+        self.X[:self.n - 1] = 1
+        
     def obtain_A(self):
-        matrizA = np.zeros(((2*self.n)-2, self.n+2*self.m), dtype=float)
+        matrizA = np.zeros(((2*self.n)-2, (self.n+2*self.m)-1), dtype=float)
         
-        n_aux = 1
+        n_aux = 0
         for i, node in enumerate(self.nodes[1:]):
             matrizA[2*i, n_aux] = np.sum([line.G for line in node.lines])
             matrizA[2*i+1, n_aux] = np.sum([line.B for line in node.lines])
@@ -73,35 +77,51 @@ class grid:
                     matrizA[2*i, line.index[0]] = -line.G
                     matrizA[2*i, line.index[1]] = line.B
                     matrizA[2*i+1, line.index[0]] = -line.B
-                    matrizA[2*i+1, line.index[1]] = -line.G
-                    
+                    matrizA[2*i+1, line.index[1]] = -line.G            
         self.A = matrizA
+        
+    def ineq(self, X):
+        rest = []
+        for line in self.lines:
+            rest.append(line.ineq(X))
+            
+        return rest
+
+    def solve_pf(self):
+        self.obtain_A()
+        self.obtain_B()
+        self.obtain_f()
+        
+        lc = LinearConstraint(self.A, self.B, self.B)
+        nlc = NonlinearConstraint(self.ineq, -np.inf, 0)
+        fo = lambda x: self.f.dot(x)
+        sol = minimize(fo, self.X, constraints=(lc, nlc))
+        return sol
         
     
     def obtain_B(self):
-        matrizB = np.zeros(((2*self.n)-2,1), dtype=float)
+        matrizB = np.zeros(2*self.n-2, dtype=float)
         
         for i, node in enumerate(self.nodes[1:]):
            
             for x in node.pros:
                 matrizB[2*i] += x.P
-                matrizB[2*i+1] += x.Q         
-            
+                matrizB[2*i+1] += x.Q             
         self.B = matrizB
         
     
-    def obtain_f(self, X):
-        f = np.zeros((1, self.n+2*self.m))
+    def obtain_f(self):
+        f = np.zeros((1, self.x_size))
         # aux = self.n
         
         # while aux < (self.m + self.n):
         #     f[0, aux] = 1
         #     aux += 1
         
-        f[0, self.n:(self.n+self.m)] = 1
+        f[0, self.n - 1:(self.n+self.m) - 1] = -1
         self.f = f
-        cuenta = np.dot(f, X)
-        self.cuenta = cuenta
+        # cuenta = np.dot(f, X)
+        # self.cuenta = cuenta
            
 
         
@@ -295,13 +315,15 @@ class line:
         self.index = []  
         
     def ineq(self, X):
-        Ckk = X[self.nodes[0].index]
+        if self.nodes[0].slack == True:
+            Ckk = 1
+        else:
+            Ckk = X[self.nodes[0].index]
         Ctt = X[self.nodes[1].index]
         self.Ckt = X[self.index[0]]
         self.Skt = X[self.index[1]]
         ineq = self.Ckt**2 + self.Skt**2 - Ckk * Ctt
-        self.ineq = ineq
-        print(ineq)
+        return ineq
         
 class prosumer:
     def __init__(self, ref, node_id, P, Q, nodes_list):
