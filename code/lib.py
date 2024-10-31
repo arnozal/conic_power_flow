@@ -84,9 +84,16 @@ class grid:
         rest = []
         for line in self.lines:
             rest.append(line.ineq(X))
-            
+          
         return rest
-
+    
+    def intensity(self):
+        intens = []
+        for line in self.lines:
+            intens.append(line.intensity())
+            print(f"Intensidad de la línea {line.ref}: {line.intensity()}")
+        return intens    
+    
     def solve_pf(self):
         self.obtain_A()
         self.obtain_B()
@@ -122,7 +129,21 @@ class grid:
         self.f = f
         # cuenta = np.dot(f, X)
         # self.cuenta = cuenta
-           
+    
+    def obtain_volt(self):
+             
+        A =[[1, 0], [0, 1]]
+        self.nodes[0].U = complex(1, 0)
+        print(f"Tension en nodo {self.nodes[0].ref}: {self.nodes[0].U}")        
+        for node in self.nodes[1:]:
+            for line in node.lines:
+                if node == line.nodes[1]:
+                    b = [line.Ckt, line.Skt]
+                    x = np.linalg.solve(A, b)
+                    node.U = complex(x[0], x[1])
+                    print(f"Tension en nodo {node.ref}: {node.U}")
+                    A = [[x[0], x[1]], [x[1], x[0]]]                                     
+        return [node.U for node in self.nodes]       
 
         
     def pf(self):
@@ -299,6 +320,7 @@ class node:
         self.Ckk = None
         self.Ctt = None
         self.index = None
+        self.U = None
         
 class line:
     def __init__(self, ref, From, To, R, X, nodes_list):
@@ -324,7 +346,11 @@ class line:
         self.Skt = X[self.index[1]]
         ineq = self.Ckt**2 + self.Skt**2 - Ckk * Ctt
         return ineq
-        
+     
+    def intensity(self):
+        I = (self.nodes[0].U - self.nodes[1].U) / self.Z
+        return I
+            
 class prosumer:
     def __init__(self, ref, node_id, P, Q, nodes_list):
         self.ref = ref

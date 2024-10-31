@@ -7,10 +7,10 @@ Ubase = 20e3
 Zbase = (Ubase**2)/Sbase
 
 # Nodes
-Nodes = [{'id': 0, 'slack': True  , 'V': 20e3/Ubase},
-         {'id': 1, 'slack': False , 'V': 20e3/Ubase},
-         {'id': 2, 'slack': False , 'V': 20e3/Ubase},
-         {'id': 3, 'slack': False , 'V': 20e3/Ubase}]
+Nodes = [{'id': 0, 'slack': True },
+         {'id': 1, 'slack': False},
+         {'id': 2, 'slack': False},
+         {'id': 3, 'slack': False},]
 
 # Lines
 Lines = [{'id': 0,  'From': 0,  'To': 1,  'R': 0.161*4/Zbase, 'X': 0.109*4/Zbase}, 
@@ -26,6 +26,9 @@ Pros = [{'id': 0, 'Node': 1, 'P': -2e6/Sbase, 'Q': -1.5e6/Sbase},
 net = lib.grid(Nodes, Lines, Pros)
 
 sol = net.solve_pf()
+Volt = net.obtain_volt()
+I = net.intensity()
+
 
 # for x in net.nodes:
 #     for y in x.pros:
@@ -50,12 +53,8 @@ sol = net.solve_pf()
 
 # lineas = net.lines
 # for linea in lineas:
-#     linea.ineq(X)
+#     linea.intensity()
 
-
-# Inecuacion = lib.line(ref= 0, From= 0, To= 1, R= 0.161*4/Zbase, X= 0.109*4/Zbase, nodes_list= Nodes )
-# Inecuacion.ineq()
-# Ineq = Inecuacion.ineq
 
 # Algunos comandos interesantes
 # net.__dict__
