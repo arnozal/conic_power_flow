@@ -37,11 +37,11 @@ with open('red32nudos/datos_32.m') as fp:
                               })
             if float(data[5]) != 0 and float(data[6]) != 0:
                 Pros.append({
-                                  'id': int(data[2])-1, 
-                                  'Node': int(data[2]), 
-                                  'P': float(data[5])*1000/Sbase, 
-                                  'Q': float(data[6])*1000/Sbase
-                                  })
+                              'id': int(data[2])-1, 
+                              'Node': int(data[2]), 
+                              'P': float(data[5])*1000/Sbase, 
+                              'Q': float(data[6])*1000/Sbase
+                              })
     
         if 'datsis' in data:
             flag = True
@@ -65,8 +65,8 @@ with open('red32nudos/datos_32.m') as fp:
             Pros.append({
                              'id': int(data[2])-1, 
                              'Node': int(data[2]), 
-                             'P': float(data[5])/Sbase, 
-                             'Q': float(data[6])/Sbase
+                             'P': float(data[5])*1000/Sbase, 
+                             'Q': float(data[6])*1000/Sbase
                              })
         data = fp.readline()
 
@@ -75,3 +75,5 @@ net = lib.grid(Nodes, Lines, Pros)
 sol = net.solve_pf()
 Volt = net.obtain_volt()
 I = net.intensity()
+Check = net.comprobacion_Kirchoff() 
+I_pros = net.intensity_pros()

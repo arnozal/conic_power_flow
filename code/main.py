@@ -28,7 +28,8 @@ net = lib.grid(Nodes, Lines, Pros)
 sol = net.solve_pf()
 Volt = net.obtain_volt()
 I = net.intensity()
-
+Check = net.comprobacion_Kirchoff() 
+I_pros = net.intensity_pros()
 
 # for x in net.nodes:
 #     for y in x.pros:
