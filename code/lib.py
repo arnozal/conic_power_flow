@@ -102,7 +102,7 @@ class grid:
             print(f"Itensidad del prosumer {pros.ref}: {pros.intensity()}")
         return intens_pros    
     
-    def comprobacion_Kirchoff(self, tolerancia = 1e-6):
+    def comprobacion_Kirchoff(self, tolerancia = 1e-3):
         Check = []
         for node in self.nodes[1:]:
             total_intens = 0 + 0j
@@ -112,8 +112,7 @@ class grid:
                 elif line.nodes[1] == node:
                     total_intens += line.intensity()  #Entra intensidad al nodo   
             for pros in node.pros:
-                if pros.node == node:
-                    total_intens += pros.intensity() 
+                total_intens += pros.intensity() 
             if abs(total_intens) < tolerancia:
                 Check.append(True)
             else: 
@@ -131,6 +130,8 @@ class grid:
         nlc = NonlinearConstraint(self.ineq, -np.inf, 0)
         fo = lambda x: self.f.dot(x)
         sol = minimize(fo, self.X, constraints=(lc, nlc))
+        for index, node in enumerate(self.nodes[1:]):
+            node.Ckk = sol.x[index]
         return sol
         
     
@@ -160,20 +161,36 @@ class grid:
     
     def obtain_volt(self):
              
-        A =[[1, 0], [0, 1]]
+        # A =[[1, 0], [0, 1]]
+        # self.nodes[0].U = complex(1, 0)
+        # print(f"Tension en nodo {self.nodes[0].ref}: {self.nodes[0].U}")        
+        # for node in self.nodes[1:]:
+        #     for line in node.lines:
+        #         if node == line.nodes[1]:
+        #             b = [line.Ckt, line.Skt]
+        #             print(f"Ckt de la línea {line.ref}: {line.Ckt}, y Skt: {line.Skt}")
+        #             x = np.linalg.solve(A, b)
+        #             node.U = complex(x[0], x[1])
+        #             print(f"Tension en nodo {node.ref}: {node.U}\n")
+        #             A = [[x[0], x[1]], [x[1], x[0]]]                                     
+        # return [node.U for node in self.nodes]  
+        
+        
+        
+        
         self.nodes[0].U = complex(1, 0)
-        print(f"Tension en nodo {self.nodes[0].ref}: {self.nodes[0].U}")        
-        for node in self.nodes[1:]:
-            for line in node.lines:
-                if node == line.nodes[1]:
-                    b = [line.Ckt, line.Skt]
-                    print(f"Ckt de la línea {line.ref}: {line.Ckt}, y Skt: {line.Skt}")
-                    x = np.linalg.solve(A, b)
-                    node.U = complex(x[0], x[1])
-                    print(f"Tension en nodo {node.ref}: {node.U}\n")
-                    A = [[x[0], x[1]], [x[1], x[0]]]                                     
-        return [node.U for node in self.nodes]       
-
+             
+        
+        for line in self.lines:
+            A = np.array([[np.real(line.nodes[0].U), np.imag(line.nodes[0].U)], 
+                          [-np.imag(line.nodes[0].U), np.real(line.nodes[0].U)]])
+            b = [line.Ckt, line.Skt]
+           
+            x = np.linalg.solve(A, b)
+            line.nodes[1].U = complex(x[0], x[1])
+            
+                                                 
+        return [node.U for node in self.nodes]
         
     # def pf(self):
     #     n = len(self.nodes)
@@ -370,6 +387,7 @@ class line:
             Ckk = 1
         else:
             Ckk = X[self.nodes[0].index]
+        
         Ctt = X[self.nodes[1].index]
         self.Ckt = X[self.index[0]]
         self.Skt = X[self.index[1]]
@@ -377,8 +395,9 @@ class line:
         return ineq
      
     def intensity(self):
-        I = (self.nodes[0].U - self.nodes[1].U) / self.Z
-        return I
+        self.I = (self.nodes[0].U - self.nodes[1].U) / self.Z
+        
+        return self.I
             
 class prosumer:
     def __init__(self, ref, node_id, P, Q, nodes_list):
@@ -390,5 +409,5 @@ class prosumer:
         self.node.pros.append(self)
         
     def intensity(self):
-        I_pros = self.S / self.node.U
-        return I_pros
+        self.I = np.conj(self.S/(self.node.U))
+        return self.I
