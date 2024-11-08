@@ -69,7 +69,8 @@ with open('red32nudos/datos_32.m') as fp:
                              'Q': float(data[6])*1000/Sbase
                              })
         data = fp.readline()
-# Lines = Lines[:32] #Las redes radiales.
+
+Lines = Lines[:32] #Las redes radiales.
 net = lib.grid(Nodes, Lines, Pros)
 
 sol = net.solve_pf()

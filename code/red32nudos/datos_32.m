@@ -1,14 +1,14 @@
 
 % Datos del sistema de 32 nudos (articulo_red32nudos.pdf)
 
-% Matriz [ nºrama  nudo_origen  nudo_destino  R(ohm)   X(ohm)  Pnudo_destino(kW)  Qnudo_destino(kVAr) ]
+% Matriz [ nºrama  nudo_origen  nudo_destino  R(pu)   X(pu)  Pnudo_destino(MW)  Qnudo_destino(MVAr) ]
 
-datsis = [  1           33             1      0.0922   0.0470       100.00               60.00   
-            2            1             2      0.4930   0.2511        90.00               40.00 
-            3            2             3      0.3660   0.1864       120.00               80.00 
-            4            3             4      0.3811   0.1941        60.00               30.00 
-            5            4             5      0.8190   0.7070        60.00               20.00 
-            6            5             6      0.1872   0.6188       200.00              100.00 
+datsis = [  1           69             1      9.36E-7   2.25E-6       0               0   
+            2            1             2      9.36E-7   2.25E-6       0               0
+            3            2             3      2.81E-6   6.74E-6       0               0
+            4            3             4      4.70E-5   5.50E-5       0               0 
+            5            4             5      6.85E-4   3.49E-4       8.78E-4         7.20E-4 
+            6            5             6      7.13E-4   3.63E-4       1.35E-2         9.98E-3 
             7            6             7      0.7114   0.2351       200.00              100.00 
             8            7             8      1.0300   0.7400        60.00               20.00 
             9            8             9      1.0440   0.7400        60.00               20.00 

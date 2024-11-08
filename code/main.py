@@ -31,44 +31,7 @@ I = net.intensity()
 Check = net.comprobacion_Kirchoff() 
 I_pros = net.intensity_pros()
 
+   
+
 for node in net.nodes:
-    print(node.Ckk)
-    
-    
-for line in net.lines:
-    print(line.Ckt)
-    print(line.Skt)    
-# for x in net.nodes:
-#     for y in x.pros:
-#         print(f'Nodo {x.ref} Prosumer {y.ref}\n')
-
-# a, b = net.pf()
-# #A = net.obtain_A()
-# #B = net.obtain_B()
-# #X = net.obtain_index()
-# #f = net.obtain_f()
-
-# net.obtain_index()
-# net.obtain_A()
-# net.obtain_B()
-# A = net.A
-# B = net.B
-# X = net.X
-# net.obtain_f(X)
-# f = net.f
-
-
-
-# lineas = net.lines
-# for linea in lineas:
-#     linea.intensity()
-
-
-# Algunos comandos interesantes
-# net.__dict__
-# net.nodes[0].__dict__
-# net.nodes[0].lines[0].__dict__
-# net.nodes[0].lines[0].nodes[0].__dict__
-
-# for node in net.nodes:
-#     print(node.__dict__)
+    print(node.Ckk)    
