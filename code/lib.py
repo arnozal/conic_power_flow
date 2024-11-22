@@ -1,6 +1,10 @@
 # Importing required libraries
 import numpy as np
 from scipy.optimize import minimize, NonlinearConstraint, LinearConstraint
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from scipy.interpolate import griddata
+
 
 class grid:
     def __init__(self, nodes, lines, pros):
@@ -13,26 +17,29 @@ class grid:
         self.obtain_index()
         
     def add_nodes(self, nodes):
+        
         nodes_list = list()
         for item in nodes:
             nodes_list.append(node(item['id'], item['slack']))
         return nodes_list
         
     def add_lines(self, lines, nodes):
+        
         lines_list = list()
         for item in lines:
             lines_list.append(line(item['id'], item['From'], item['To'], item['R'], item['X'], nodes))
         return lines_list
         
     def add_pros(self, pros, nodes):
+        
         pros_list = list()
         for item in pros:
             pros_list.append(prosumer(item['id'], item['Node'], item['P'], item['Q'], nodes))
         return pros_list
     
     def obtain_index(self):
+        
         n_aux = 0
-        # matrizX = np.zeros((self.x_size,1), dtype=float)
         while n_aux < self.n:
             self.nodes[n_aux].index = n_aux -1
             n_aux += 1
@@ -53,6 +60,7 @@ class grid:
         self.X[:self.n - 1] = 1
         
     def obtain_A(self):
+        
         matrizA = np.zeros(((2*self.n)-2, (self.n+2*self.m)-1), dtype=float)
         
         n_aux = 0
@@ -75,6 +83,7 @@ class grid:
         self.A = matrizA
         
     def ineq(self, X):
+        
         rest = []
         for line in self.lines:
             rest.append(line.ineq(X))
@@ -93,7 +102,7 @@ class grid:
             intens_pros.append(pros.intensity()) 
         return intens_pros    
     
-    def comprobacion_Kirchoff(self, tolerancia = 1e-3):
+    def comprobacion_Kirchhoff(self, tolerancia = 1e-2):
         Check = []
         for node in self.nodes[1:]:
             total_intens = 0 + 0j
@@ -113,20 +122,26 @@ class grid:
         
     
     def solve_pf(self):
+        
         self.obtain_A()
         self.obtain_B()
         self.obtain_f()
+        
         
         lc = LinearConstraint(self.A, self.B, self.B)
         nlc = NonlinearConstraint(self.ineq, -np.inf, 0)
         fo = lambda x: self.f.dot(x)
         sol = minimize(fo, self.X, constraints=(lc, nlc))
+        
+       
         for index, node in enumerate(self.nodes[1:]):
-            node.Ckk = sol.x[index]
+            node.Ckk = sol.x[index]      
+        
         return sol
         
     
     def obtain_B(self):
+        
         matrizB = np.zeros(2*self.n-2, dtype=float)
         
         for i, node in enumerate(self.nodes[1:]):
@@ -138,26 +153,13 @@ class grid:
         
     
     def obtain_f(self):
+        
         f = np.zeros((1, self.x_size))       
         f[0, self.n - 1:(self.n+self.m) - 1] = -1
         self.f = f
     
     def obtain_volt(self):
-             
-        # A =[[1, 0], [0, 1]]
-        # self.nodes[0].U = complex(1, 0)       
-        # for node in self.nodes[1:]:
-        #     for line in node.lines:
-        #         if node == line.nodes[1]:
-        #             b = [line.Ckt, line.Skt]
-        #             x = np.linalg.solve(A, b)
-        #             node.U = complex(x[0], x[1])
-        #             A = [[x[0], x[1]], [-x[1], x[0]]]                                     
-        # return [node.U for node in self.nodes]  
-        
-        
-        
-        
+                  
         self.nodes[0].U = complex(1, 0)
         for line in self.lines:
             A = np.array([[np.real(line.nodes[0].U), np.imag(line.nodes[0].U)], 
@@ -166,8 +168,82 @@ class grid:
             x = np.linalg.solve(A, b)
             line.nodes[1].U = complex(x[0], x[1])
            
-        return [node.U for node in self.nodes]
+        return [node.U for node in self.nodes]  
         
+    def plot_voltages(self):
+        # Extraer las magnitudes y ángulos de las tensiones de cada nodo
+        magnitudes = [abs(node.U) for node in self.nodes]
+        
+        node_ids = [node.ref for node in self.nodes]
+        
+        # Crear un gráfico de barras para la magnitud de la tensión
+        plt.figure(figsize=(16, 6))
+        
+        plt.bar(node_ids, magnitudes, color='skyblue', edgecolor='black')
+        plt.xlabel('Nodo', fontsize=16, fontname='Arial')
+        plt.ylabel('Magnitud Tensión (pu)', fontsize=16, fontname='Arial')
+        # plt.title('Voltage Magnitudes of Nodes')
+        plt.xticks(node_ids, fontsize=12, fontname='Arial', rotation=0)# Mostrar solo números enteros
+        plt.yticks(fontsize=16, fontname='Arial')
+        plt.ylim(0.91, 1.02)
+        plt.grid(True)
+        plt.tight_layout()
+        plt.show()
+        
+        
+    def plot_line_currents(self):
+        # Crear listas para las intensidades y las referencias de las líneas
+        line_ids = [line.ref for line in self.lines]
+        line_currents = [abs(line.I) for line in self.lines]  # Tomamos el valor absoluto de la corriente
+        
+        # Crear el gráfico
+        plt.figure(figsize=(16, 6))
+        plt.bar(line_ids, line_currents, color='yellow', edgecolor='black')
+        plt.xlabel('Línea', fontsize=16, fontname='Arial')
+        plt.ylabel('Intensidad (pu)', fontsize=16, fontname='Arial')
+        # plt.title('Current Intensities of Each Line')
+        plt.xticks(line_ids, fontsize=12, fontname='Arial', rotation=0)
+        plt.yticks(fontsize=16, fontname='Arial')
+        plt.grid(True)
+        
+        # Mostrar los valores exactos en cada punto desplazados a la derecha
+        # for i, current in enumerate(line_currents):
+        #     if i % 3 == 0:
+        #         plt.text(line_ids[i] + 0.1, current + 0.02, f'{current:.2f}', ha='left', va='bottom', fontsize=9, rotation=45)
+        
+        plt.tight_layout()
+        plt.show()  
+        
+    def plot_prosumers_currents(self):
+        # Obtener los IDs de los prosumer
+        prosumer_ids = [prosumer.ref for prosumer in self.pros]
+        
+        # Obtener las corrientes de cada prosumer
+        currents = [prosumer.intensity() for prosumer in self.pros]
+        
+        # Obtener las magnitudes de las corrientes
+        currents_magnitude = [abs(I) for I in currents]
+        
+        # Crear el gráfico de la corriente
+        plt.figure(figsize=(16, 6))
+        
+        # Graficar la corriente de cada prosumer
+        plt.bar(prosumer_ids, currents_magnitude, color='red', edgecolor='black')
+        plt.xlabel('Consumidor/Generador', fontsize=16, fontname='Arial')
+        plt.ylabel('Intensidad (pu)', fontsize=16, fontname='Arial')
+        # plt.title('Current for Each Prosumer')
+        plt.xticks(prosumer_ids, fontsize=12, fontname='Arial', rotation=0)
+        plt.yticks(fontsize=16, fontname='Arial')
+        # plt.xlim(5,)
+        plt.tick_params(axis='x', pad=5)  # Separar los números del eje X del eje
+        plt.grid(True)
+        plt.legend()        
+        plt.tight_layout()
+        plt.show()       
+        
+        
+   
+    
 class node:
     def __init__(self, ref, slack):
         self.ref = ref   

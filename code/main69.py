@@ -21,9 +21,11 @@ df = pd.read_csv('red69nudos/69nudos.csv', decimal=',')
 df.head()
 df.fillna(0.0, inplace=True)
 df['node_from'].replace(69, 0, inplace=True)
+# df['node_from'] = df['node_from'].replace(69, 0)
 df['node_to'].replace(69, 0, inplace=True)
+# df['node_to'] = df['node_to'].replace(69, 0)
 
-j = 0
+
 for i, row in df.iterrows():
     Lines.append({
                 'id': i, 
@@ -44,12 +46,12 @@ for i, row in df.iterrows():
     if float(row['p_to_MW']) != 0 and float(row['q_to_Mvar']) != 0:
         
        Pros.append({
-                   'id': j,
+                   'id': int(row['node_to'])-1,
                    'Node': int(row['node_to']),
-                   'P': float(row['p_to_MW']/Sbase),
-                   'Q': float(row['q_to_Mvar']/Sbase),
+                   'P': -float(row['p_to_MW']*1000000/Sbase),
+                   'Q': -float(row['q_to_Mvar']*1000000/Sbase),
                    })
-       j += 1
+      
         
         
 Lines = Lines[:68] #Las redes radiales.
@@ -58,6 +60,9 @@ net = lib.grid(Nodes, Lines, Pros)
 sol = net.solve_pf()
 Volt = net.obtain_volt()    
 I = net.intensity()
-Check = net.comprobacion_Kirchoff() 
+Check = net.comprobacion_Kirchhoff() 
 I_pros = net.intensity_pros()        
         
+net.plot_voltages()
+net.plot_line_currents()
+net.plot_prosumers_currents()

@@ -2,6 +2,7 @@
 import numpy as np
 import lib
 
+
 Sbase = 1e6
 Ubase = 20e3
 Zbase = (Ubase**2)/Sbase
@@ -28,10 +29,11 @@ net = lib.grid(Nodes, Lines, Pros)
 sol = net.solve_pf()
 Volt = net.obtain_volt()
 I = net.intensity()
-Check = net.comprobacion_Kirchoff() 
+Check = net.comprobacion_Kirchhoff() 
 I_pros = net.intensity_pros()
 
-   
+# net.plot_convergence()   
+net.plot_voltages()
+net.plot_line_currents()
+net.plot_prosumers_currents()
 
-for node in net.nodes:
-    print(node.Ckk)    
